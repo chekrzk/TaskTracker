@@ -1,0 +1,21 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: #fff;
+    color: #172b4d;
+    font-family: system-ui, sans-serif;
+    line-height: 1.6;
+}
+
+.welcome {
+    max-width: 760px;
+    margin: 64px auto;
+    padding: 24px;
+}
+
+h1 {
+    margin-top: 0;
+}
