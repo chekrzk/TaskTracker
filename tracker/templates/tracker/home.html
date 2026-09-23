@@ -11,7 +11,12 @@
     <main class="welcome">
         <h1>Жир</h1>
         <p>Управление компаниями, продуктами, командами и задачами.</p>
-        <p>Добро пожаловать! Приложение находится в разработке.</p>
+        <p>Добро пожаловать, {{ user.get_full_name|default:user.username }}!</p>
+        <p>Рабочая часть приложения находится в разработке.</p>
+        <form method="post" action="{% url 'tracker:logout' %}">
+            {% csrf_token %}
+            <button type="submit">Выйти</button>
+        </form>
     </main>
 </body>
 </html>
