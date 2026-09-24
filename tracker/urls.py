@@ -38,12 +38,42 @@ urlpatterns = [
         name='team_member_delete',
     ),
     path(
+        'teams/<int:team_id>/columns/create/',
+        views.board_column_create,
+        name='board_column_create',
+    ),
+    path(
+        'teams/<int:team_id>/columns/reorder/',
+        views.board_columns_reorder,
+        name='board_columns_reorder',
+    ),
+    path(
+        'columns/<int:pk>/edit/',
+        views.board_column_edit,
+        name='board_column_edit',
+    ),
+    path(
+        'columns/<int:pk>/delete/',
+        views.board_column_delete,
+        name='board_column_delete',
+    ),
+    path(
         'teams/<int:team_id>/tasks/create/',
         views.task_create,
         name='task_create',
     ),
     path('tasks/<int:pk>/', views.task_detail, name='task_detail'),
     path('tasks/<int:pk>/edit/', views.task_edit, name='task_edit'),
+    path(
+        'tasks/<int:pk>/column/',
+        views.task_column_update,
+        name='task_column_update',
+    ),
+    path(
+        'tasks/<int:task_id>/comments/create/',
+        views.comment_create,
+        name='comment_create',
+    ),
     path('register/', views.register, name='register'),
     path(
         'login/',

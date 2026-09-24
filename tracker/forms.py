@@ -2,7 +2,9 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 
-from .models import Company, Product, Task, Team, TeamMember
+from .models import (
+    BoardColumn, Comment, Company, Product, Task, Team, TeamMember,
+)
 
 
 class BootstrapFormMixin:
@@ -76,6 +78,13 @@ class TeamMemberForm(BootstrapFormMixin, forms.ModelForm):
         return user
 
 
+
+class BoardColumnForm(BootstrapFormMixin, forms.ModelForm):
+    class Meta:
+        model = BoardColumn
+        fields = ('name',)
+
+
 class TaskForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = Task
@@ -115,3 +124,17 @@ class TaskForm(BootstrapFormMixin, forms.ModelForm):
             self.fields['assignee'].help_text = (
                 'Назначать исполнителя может только Team Lead.'
             )
+
+
+
+class CommentForm(BootstrapFormMixin, forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ('text',)
+        labels = {'text': 'Комментарий'}
+        widgets = {
+            'text': forms.Textarea(attrs={
+                'rows': 4,
+                'placeholder': 'Напишите комментарий',
+            }),
+        }

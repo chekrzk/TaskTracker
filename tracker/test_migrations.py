@@ -91,3 +91,85 @@ for team in teams:
                 timeout=60,
             )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+
+class RoleMigrationTests(SimpleTestCase):
+    def test_existing_company_owners_become_team_leads(self):
+        script = """
+import os
+import sys
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+from django.conf import settings
+settings.DATABASES['default']['NAME'] = sys.argv[1]
+
+import django
+django.setup()
+
+from django.db import connection
+from django.db.migrations.executor import MigrationExecutor
+
+executor = MigrationExecutor(connection)
+old_target = [('tracker', '0002_board_columns')]
+executor.migrate(old_target)
+old_apps = executor.loader.project_state(old_target).apps
+User = old_apps.get_model('auth', 'User')
+Company = old_apps.get_model('tracker', 'Company')
+Product = old_apps.get_model('tracker', 'Product')
+Team = old_apps.get_model('tracker', 'Team')
+TeamMember = old_apps.get_model('tracker', 'TeamMember')
+
+owner = User.objects.create(username='role_migration_owner')
+member = User.objects.create(username='role_migration_member')
+company = Company.objects.create(name='Company', owner=owner)
+product = Product.objects.create(name='Product', company=company)
+team_without_owner = Team.objects.create(name='Backend', product=product)
+team_with_owner = Team.objects.create(name='Frontend', product=product)
+TeamMember.objects.create(
+    team=team_without_owner,
+    user=member,
+    role='MEMBER',
+)
+TeamMember.objects.create(
+    team=team_with_owner,
+    user=owner,
+    role='DEVELOPER',
+)
+
+new_target = [('tracker', '0003_assign_team_owners_as_leads')]
+executor = MigrationExecutor(connection)
+executor.migrate(new_target)
+apps = executor.loader.project_state(new_target).apps
+TeamMember = apps.get_model('tracker', 'TeamMember')
+
+assert TeamMember.objects.get(
+    team_id=team_without_owner.pk,
+    user_id=owner.pk,
+).role == 'LEAD'
+assert TeamMember.objects.get(
+    team_id=team_with_owner.pk,
+    user_id=owner.pk,
+).role == 'LEAD'
+assert TeamMember.objects.get(
+    team_id=team_without_owner.pk,
+    user_id=member.pk,
+).role == 'MEMBER'
+assert TeamMember.objects.filter(
+    team_id=team_without_owner.pk,
+    user_id=owner.pk,
+).count() == 1
+"""
+        with tempfile.TemporaryDirectory() as directory:
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    '-c',
+                    script,
+                    str(Path(directory) / 'role-migration.sqlite3'),
+                ],
+                cwd=settings.BASE_DIR,
+                capture_output=True,
+                text=True,
+                timeout=60,
+            )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)

@@ -148,6 +148,13 @@ class TeamViewTests(TestCase):
                 ('DONE', 4),
             ],
         )
+        self.assertTrue(
+            TeamMember.objects.filter(
+                team=team,
+                user=self.owner,
+                role=TeamMember.Role.LEAD,
+            ).exists(),
+        )
 
     def test_non_owner_cannot_create_team(self):
         create_url = reverse('tracker:team_create', args=[self.product.pk])
@@ -232,38 +239,35 @@ class TeamViewTests(TestCase):
             404,
         )
 
-    def test_owner_and_lead_can_edit_but_product_cannot_be_changed(self):
+    def test_only_lead_can_edit_team_and_product_cannot_be_changed(self):
         edit_url = reverse('tracker:team_edit', args=[self.team.pk])
-        for user, name in [
-            (self.owner, 'Owner renamed team'),
-            (self.lead, 'Lead renamed team'),
-        ]:
+        self.client.force_login(self.lead)
+        response = self.client.post(
+            edit_url,
+            {
+                'name': 'Lead renamed team',
+                'description': 'Updated',
+                'product': self.private_product.pk,
+            },
+        )
+        self.assertRedirects(
+            response,
+            reverse('tracker:team_detail', args=[self.team.pk]),
+        )
+        self.team.refresh_from_db()
+        self.assertEqual(self.team.name, 'Lead renamed team')
+        self.assertEqual(self.team.product, self.product)
+
+        for user in [self.owner, self.member]:
             with self.subTest(user=user.username):
                 self.client.force_login(user)
-                response = self.client.post(
-                    edit_url,
-                    {
-                        'name': name,
-                        'description': 'Updated',
-                        'product': self.private_product.pk,
-                    },
+                self.assertEqual(self.client.get(edit_url).status_code, 403)
+                self.assertEqual(
+                    self.client.post(edit_url, {'name': 'Forbidden'}).status_code,
+                    403,
                 )
-                self.assertRedirects(
-                    response,
-                    reverse('tracker:team_detail', args=[self.team.pk]),
-                )
-                self.team.refresh_from_db()
-                self.assertEqual(self.team.name, name)
-                self.assertEqual(self.team.product, self.product)
 
-        self.client.force_login(self.member)
-        self.assertEqual(self.client.get(edit_url).status_code, 403)
-        self.assertEqual(
-            self.client.post(edit_url, {'name': 'Forbidden'}).status_code,
-            403,
-        )
-
-    def test_owner_and_lead_can_add_members_with_role(self):
+    def test_only_lead_can_add_members_with_role(self):
         add_url = reverse('tracker:team_member_add', args=[self.team.pk])
         self.client.force_login(self.lead)
         response = self.client.post(
@@ -282,12 +286,18 @@ class TeamViewTests(TestCase):
 
         membership.delete()
         self.client.force_login(self.owner)
-        self.assertRedirects(
+        self.assertEqual(
             self.client.post(
                 add_url,
                 {'user': self.candidate.pk, 'role': TeamMember.Role.LEAD},
-            ),
-            reverse('tracker:team_detail', args=[self.team.pk]),
+            ).status_code,
+            403,
+        )
+        self.assertFalse(
+            TeamMember.objects.filter(
+                team=self.team,
+                user=self.candidate,
+            ).exists(),
         )
 
     def test_duplicate_member_is_rejected(self):
@@ -315,7 +325,7 @@ class TeamViewTests(TestCase):
             'tracker:team_member_delete',
             args=[self.team.pk, self.lead_membership.pk],
         )
-        for user in [self.member, self.outsider]:
+        for user in [self.owner, self.member, self.outsider]:
             with self.subTest(user=user.username):
                 self.client.force_login(user)
                 self.assertEqual(
@@ -395,6 +405,7 @@ class TeamViewTests(TestCase):
             ).status_code,
             403,
         )
+        client.force_login(self.lead)
         self.assertEqual(
             client.post(
                 reverse('tracker:team_edit', args=[self.team.pk]),

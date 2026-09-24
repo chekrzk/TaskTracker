@@ -119,3 +119,23 @@ body {
 .kanban-column .card-body {
     background: #f7f8f9;
 }
+
+.kanban-board[data-can-move-tasks="true"] .kanban-task {
+    cursor: grab;
+}
+
+.kanban-board[data-can-move-tasks="true"] .kanban-task:active {
+    cursor: grabbing;
+}
+
+.kanban-task-ghost {
+    opacity: 0.35;
+}
+
+.kanban-task-chosen {
+    box-shadow: 0 0 0 2px rgba(12, 102, 228, 0.35);
+}
+
+.kanban-task-drag {
+    transform: rotate(1deg);
+}
