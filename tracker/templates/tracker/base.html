@@ -1,0 +1,72 @@
+{% load static %}
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Жир{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
+          crossorigin="anonymous">
+    <link rel="stylesheet" href="{% static 'tracker/css/style.css' %}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <header class="app-navbar navbar navbar-expand bg-white border-bottom sticky-top">
+        <div class="container-fluid px-3 px-lg-4">
+            <a class="navbar-brand fw-bold" href="{% url 'tracker:home' %}">Жир</a>
+            {% if user.is_authenticated %}
+                <div class="d-flex align-items-center gap-3 ms-auto">
+                    <span class="navbar-text text-truncate">
+                        {{ user.get_full_name|default:user.username }}
+                    </span>
+                    <form method="post" action="{% url 'tracker:logout' %}">
+                        {% csrf_token %}
+                        <button class="btn btn-outline-secondary btn-sm" type="submit">Выйти</button>
+                    </form>
+                </div>
+            {% endif %}
+        </div>
+    </header>
+
+    {% if user.is_authenticated %}
+        <div class="app-shell">
+            <aside class="app-sidebar border-end" aria-label="Основная навигация">
+                <nav class="nav nav-pills flex-column gap-1 p-3">
+                    {% with current_url=request.resolver_match.url_name %}
+                    <a class="nav-link{% if current_url == 'home' %} active{% endif %}"
+                       {% if current_url == 'home' %}aria-current="page"{% endif %}
+                       href="{% url 'tracker:home' %}">Dashboard</a>
+                    <a class="nav-link{% if current_url == 'company_list' or current_url == 'company_create' or current_url == 'company_detail' or current_url == 'company_edit' or current_url == 'product_create' or current_url == 'product_detail' or current_url == 'product_edit' %} active{% endif %}"
+                       {% if current_url == 'company_list' or current_url == 'company_create' or current_url == 'company_detail' or current_url == 'company_edit' or current_url == 'product_create' or current_url == 'product_detail' or current_url == 'product_edit' %}aria-current="page"{% endif %}
+                       href="{% url 'tracker:company_list' %}">Компании</a>
+                    <a class="nav-link{% if current_url == 'team_list' or current_url == 'team_create' or current_url == 'team_detail' or current_url == 'team_edit' or current_url == 'team_member_add' or current_url == 'team_member_delete' or current_url == 'task_create' or current_url == 'task_detail' or current_url == 'task_edit' or current_url == 'comment_create' or current_url == 'board_column_create' or current_url == 'board_columns_reorder' or current_url == 'board_column_edit' or current_url == 'board_column_delete' or current_url == 'task_column_update' %} active{% endif %}"
+                       {% if current_url == 'team_list' or current_url == 'team_create' or current_url == 'team_detail' or current_url == 'team_edit' or current_url == 'team_member_add' or current_url == 'team_member_delete' or current_url == 'task_create' or current_url == 'task_detail' or current_url == 'task_edit' or current_url == 'comment_create' or current_url == 'board_column_create' or current_url == 'board_columns_reorder' or current_url == 'board_column_edit' or current_url == 'board_column_delete' or current_url == 'task_column_update' %}aria-current="page"{% endif %}
+                       href="{% url 'tracker:team_list' %}">Команды</a>
+                    <a class="nav-link" href="{% url 'tracker:home' %}#my-tasks">Мои задачи</a>
+                    {% endwith %}
+                </nav>
+            </aside>
+            <main class="app-content">
+                {% include 'tracker/includes/messages.html' %}
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    {% else %}
+        <main class="auth-shell container py-5">
+            <div class="auth-card card border-0 shadow-sm mx-auto">
+                <div class="card-body p-4 p-md-5">
+                    {% include 'tracker/includes/messages.html' %}
+                    {% block auth_content %}{% endblock %}
+                </div>
+            </div>
+        </main>
+    {% endif %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+            crossorigin="anonymous"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

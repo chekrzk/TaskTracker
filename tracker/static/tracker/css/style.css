@@ -1,21 +1,173 @@
-* {
-    box-sizing: border-box;
+:root {
+    --app-navbar-height: 57px;
+    --app-sidebar-width: 240px;
+    --app-border: #dfe1e6;
+    --app-background: #f7f8f9;
+    --app-text: #172b4d;
 }
 
 body {
-    margin: 0;
+    min-height: 100vh;
+    background: var(--app-background);
+    color: var(--app-text);
+}
+
+.app-navbar {
+    min-height: var(--app-navbar-height);
+    z-index: 1030;
+}
+
+.navbar-brand {
+    color: #0c66e4;
+}
+
+.app-shell {
+    display: grid;
+    grid-template-columns: var(--app-sidebar-width) minmax(0, 1fr);
+    min-height: calc(100vh - var(--app-navbar-height));
+}
+
+.app-sidebar {
     background: #fff;
-    color: #172b4d;
-    font-family: system-ui, sans-serif;
-    line-height: 1.6;
 }
 
-.welcome {
-    max-width: 760px;
-    margin: 64px auto;
-    padding: 24px;
+.app-sidebar .nav-link {
+    color: #44546f;
 }
 
-h1 {
-    margin-top: 0;
+.app-sidebar .nav-link.active {
+    background: #e9f2ff;
+    color: #0c66e4;
+    font-weight: 600;
+}
+
+.app-sidebar .nav-link.disabled {
+    color: #8590a2;
+    cursor: default;
+}
+
+.app-content {
+    width: 100%;
+    max-width: 1440px;
+    padding: 32px;
+}
+
+.auth-shell {
+    display: flex;
+    min-height: calc(100vh - var(--app-navbar-height));
+    align-items: flex-start;
+    justify-content: center;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 480px;
+}
+
+.form-text ul {
+    margin: 0.5rem 0 0;
+    padding-left: 1.25rem;
+}
+
+@media (max-width: 767.98px) {
+    .app-shell {
+        display: block;
+    }
+
+    .app-sidebar {
+        border-right: 0 !important;
+        border-bottom: 1px solid var(--app-border);
+        overflow-x: auto;
+    }
+
+    .app-sidebar .nav {
+        flex-direction: row !important;
+        flex-wrap: nowrap;
+        min-width: max-content;
+    }
+
+    .app-content {
+        padding: 24px 16px;
+    }
+
+    .navbar-text {
+        max-width: 140px;
+    }
+}
+
+.form-card {
+    max-width: 720px;
+}
+
+.company-description {
+    overflow-wrap: anywhere;
+}
+
+.kanban-board {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    padding-bottom: 0.5rem;
+    overflow-x: auto;
+}
+
+.kanban-column {
+    width: 280px;
+    min-width: 280px;
+}
+
+.kanban-column .card-body {
+    background: #f7f8f9;
+}
+
+.kanban-board[data-can-move-tasks="true"] .kanban-task {
+    cursor: grab;
+}
+
+.kanban-board[data-can-move-tasks="true"] .kanban-task:active {
+    cursor: grabbing;
+}
+
+.kanban-task-ghost {
+    opacity: 0.35;
+}
+
+.kanban-task-chosen {
+    box-shadow: 0 0 0 2px rgba(12, 102, 228, 0.35);
+}
+
+.kanban-task-drag {
+    transform: rotate(1deg);
+}
+
+.dashboard-stat {
+    border-top: 3px solid var(--bs-primary) !important;
+}
+
+.dashboard-list .list-group-item:first-child {
+    padding-top: 0 !important;
+}
+
+.dashboard-list .list-group-item:last-child {
+    padding-bottom: 0 !important;
+    border-bottom: 0;
+}
+
+.dashboard-task-table th {
+    color: #667085;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.dashboard-task-table td {
+    min-width: 120px;
+}
+
+.dashboard-task-table td:first-child {
+    min-width: 260px;
+}
+
+.dashboard-empty {
+    min-height: 116px;
 }

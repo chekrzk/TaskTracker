@@ -1,17 +1,232 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Жир — управление командами и задачами</title>
-    <link rel="stylesheet" href="{% static 'tracker/css/style.css' %}">
-</head>
-<body>
-    <main class="welcome">
-        <h1>Жир</h1>
-        <p>Управление компаниями, продуктами, командами и задачами.</p>
-        <p>Добро пожаловать! Приложение находится в разработке.</p>
-    </main>
-</body>
-</html>
+{% extends 'tracker/base.html' %}
+
+{% block title %}Dashboard — Жир{% endblock %}
+
+{% block content %}
+    <div class="page-header d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+        <div>
+            <h1 class="h3 mb-1">Dashboard</h1>
+            <p class="text-secondary mb-0">
+                Добро пожаловать, {{ user.get_full_name|default:user.username }}.
+            </p>
+        </div>
+        <a class="btn btn-primary" href="{% url 'tracker:company_create' %}">Создать компанию</a>
+    </div>
+
+    <div class="row g-3 mb-4" aria-label="Сводка">
+        <div class="col-6 col-xl-3">
+            <div class="card dashboard-stat border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-secondary small">Мои компании</div>
+                    <div class="display-6 fw-semibold">{{ company_count }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-xl-3">
+            <div class="card dashboard-stat border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-secondary small">Мои команды</div>
+                    <div class="display-6 fw-semibold">{{ team_count }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-xl-3">
+            <div class="card dashboard-stat border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-secondary small">Назначено мне</div>
+                    <div class="display-6 fw-semibold">{{ assigned_task_count }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-xl-3">
+            <div class="card dashboard-stat border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-secondary small">Доступные задачи</div>
+                    <div class="display-6 fw-semibold">{{ accessible_task_count }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <section class="col-xl-6" aria-labelledby="companies-title">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center pt-4 px-4">
+                    <h2 id="companies-title" class="h5 mb-0">Мои компании</h2>
+                    <a class="small" href="{% url 'tracker:company_list' %}">Все компании</a>
+                </div>
+                <div class="card-body p-4">
+                    {% if companies %}
+                        <div class="list-group list-group-flush dashboard-list">
+                            {% for company in companies %}
+                                <a class="list-group-item list-group-item-action px-0 py-3"
+                                   href="{% url 'tracker:company_detail' company.pk %}">
+                                    <div class="d-flex justify-content-between gap-3">
+                                        <strong>{{ company.name }}</strong>
+                                        <span class="text-secondary small text-nowrap">
+                                            Продуктов: {{ company.product_count }}
+                                        </span>
+                                    </div>
+                                    <div class="text-secondary small mt-1">
+                                        Команд: {{ company.team_count }}
+                                    </div>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="dashboard-empty text-center py-4">
+                            <p class="text-secondary">У вас пока нет компаний.</p>
+                            <a class="btn btn-outline-primary btn-sm"
+                               href="{% url 'tracker:company_create' %}">Создать первую компанию</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+
+        <section class="col-xl-6" aria-labelledby="teams-title">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center pt-4 px-4">
+                    <h2 id="teams-title" class="h5 mb-0">Мои команды</h2>
+                    <a class="small" href="{% url 'tracker:team_list' %}">Все команды</a>
+                </div>
+                <div class="card-body p-4">
+                    {% if teams %}
+                        <div class="list-group list-group-flush dashboard-list">
+                            {% for team in teams %}
+                                <div class="list-group-item px-0 py-3">
+                                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+                                        <div>
+                                            <a class="fw-semibold text-decoration-none"
+                                               href="{% url 'tracker:team_detail' team.pk %}">
+                                                {{ team.name }}
+                                            </a>
+                                            <div class="text-secondary small mt-1">
+                                                {{ team.product.company.name }}
+                                                · {{ team.product.name }}
+                                            </div>
+                                        </div>
+                                        <span class="badge text-bg-light">{{ team.dashboard_role }}</span>
+                                    </div>
+                                    <div class="d-flex flex-wrap align-items-center gap-2 mt-3">
+                                        <span class="text-secondary small">Задач: {{ team.task_count }}</span>
+                                        <a class="btn btn-outline-secondary btn-sm ms-auto"
+                                           href="{% url 'tracker:team_detail' team.pk %}">
+                                            Открыть доску
+                                        </a>
+                                        {% if team.can_create_task %}
+                                            <a class="btn btn-primary btn-sm"
+                                               href="{% url 'tracker:task_create' team.pk %}">
+                                                Создать задачу
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="dashboard-empty text-center py-4">
+                            <p class="text-secondary mb-1">Вы пока не состоите ни в одной команде.</p>
+                            <p class="text-secondary small mb-0">
+                                Team Lead может добавить вас на странице команды.
+                            </p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <section id="my-tasks" class="card border-0 shadow-sm mb-4" aria-labelledby="assigned-title">
+        <div class="card-header bg-white border-0 pt-4 px-4">
+            <h2 id="assigned-title" class="h5 mb-0">Назначенные мне задачи</h2>
+        </div>
+        <div class="card-body p-0">
+            {% if assigned_tasks %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 dashboard-task-table">
+                        <thead>
+                            <tr>
+                                <th scope="col" class="ps-4">Задача</th>
+                                <th scope="col">Команда</th>
+                                <th scope="col">Колонка</th>
+                                <th scope="col">Приоритет</th>
+                                <th scope="col" class="pe-4">Срок</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for task in assigned_tasks %}
+                                <tr>
+                                    <td class="ps-4">
+                                        <a class="fw-semibold text-decoration-none"
+                                           href="{% url 'tracker:task_detail' task.pk %}">
+                                            TASK-{{ task.pk }} {{ task.title }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <a class="text-decoration-none"
+                                           href="{% url 'tracker:team_detail' task.team.pk %}">
+                                            {{ task.team.name }}
+                                        </a>
+                                    </td>
+                                    <td><span class="badge text-bg-light">{{ task.column.name }}</span></td>
+                                    <td>{{ task.get_priority_display }}</td>
+                                    <td class="pe-4">
+                                        {% if task.due_date %}
+                                            {{ task.due_date|date:"d.m.Y" }}
+                                        {% else %}
+                                            <span class="text-secondary">—</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if assigned_task_count > 8 %}
+                    <p class="text-secondary small px-4 py-3 mb-0">
+                        Показаны 8 недавно обновлённых задач из {{ assigned_task_count }}.
+                    </p>
+                {% endif %}
+            {% else %}
+                <div class="dashboard-empty text-center p-4">
+                    <p class="text-secondary mb-0">На вас пока не назначены задачи.</p>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="card border-0 shadow-sm" aria-labelledby="recent-title">
+        <div class="card-header bg-white border-0 pt-4 px-4">
+            <h2 id="recent-title" class="h5 mb-0">Последние задачи</h2>
+        </div>
+        <div class="card-body p-0">
+            {% if recent_tasks %}
+                <div class="list-group list-group-flush">
+                    {% for task in recent_tasks %}
+                        <a class="list-group-item list-group-item-action px-4 py-3"
+                           href="{% url 'tracker:task_detail' task.pk %}">
+                            <div class="d-flex flex-wrap justify-content-between gap-2">
+                                <span class="fw-semibold">TASK-{{ task.pk }} {{ task.title }}</span>
+                                <span class="badge text-bg-light">{{ task.column.name }}</span>
+                            </div>
+                            <div class="text-secondary small mt-1">
+                                {{ task.team.product.company.name }} · {{ task.team.name }}
+                                · {{ task.get_priority_display }}
+                                {% if task.assignee %}
+                                    · Исполнитель: {{ task.assignee.get_full_name|default:task.assignee.username }}
+                                {% else %}
+                                    · Без исполнителя
+                                {% endif %}
+                            </div>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="dashboard-empty text-center p-4">
+                    <p class="text-secondary mb-0">В доступных командах пока нет задач.</p>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+{% endblock %}

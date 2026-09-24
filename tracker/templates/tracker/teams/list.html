@@ -1,0 +1,29 @@
+{% extends 'tracker/base.html' %}
+
+{% block title %}Команды — Жир{% endblock %}
+
+{% block content %}
+    <div class="mb-4">
+        <h1 class="h3 mb-1">Команды</h1>
+        <p class="text-secondary mb-0">Команды, которыми вы владеете или в которых состоите.</p>
+    </div>
+
+    {% if teams %}
+        <div class="list-group shadow-sm">
+            {% for team in teams %}
+                <a class="list-group-item list-group-item-action p-3"
+                   href="{% url 'tracker:team_detail' team.pk %}">
+                    <div class="d-flex flex-wrap justify-content-between gap-2">
+                        <span class="fw-semibold">{{ team.name }}</span>
+                        <small class="text-secondary">{{ team.product.company.name }} / {{ team.product.name }}</small>
+                    </div>
+                    {% if team.description %}<small class="text-secondary">{{ team.description|truncatechars:180 }}</small>{% endif %}
+                </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-secondary">Доступных команд пока нет.</div>
+        </div>
+    {% endif %}
+{% endblock %}

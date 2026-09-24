@@ -1,0 +1,117 @@
+{% extends 'tracker/base.html' %}
+
+{% block title %}{{ task.title }} — Жир{% endblock %}
+
+{% block content %}
+    <nav aria-label="Хлебные крошки" class="mb-3">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'tracker:product_detail' task.team.product.pk %}">{{ task.team.product.name }}</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'tracker:team_detail' task.team.pk %}">{{ task.team.name }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ task.title }}</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-4">
+        <div>
+            <div class="d-flex flex-wrap gap-2 mb-2">
+                <span class="badge text-bg-secondary">{{ task.get_type_display }}</span>
+                <span class="badge text-bg-light">{{ task.get_priority_display }}</span>
+            </div>
+            <h1 class="h3 mb-1">{{ task.title }}</h1>
+            <p class="text-secondary mb-0">Команда: {{ task.team.name }}</p>
+        </div>
+        {% if can_edit %}
+            <a class="btn btn-outline-primary" href="{% url 'tracker:task_edit' task.pk %}">Редактировать</a>
+        {% endif %}
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <section class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h2 class="h5">Описание</h2>
+                    <div class="company-description text-secondary">{{ task.description|default:'Описание не добавлено.'|linebreaksbr }}</div>
+                </div>
+            </section>
+        </div>
+        <div class="col-lg-4">
+            <section class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h2 class="h5 mb-3">Детали</h2>
+                    <dl class="row mb-0">
+                        <dt class="col-5">Колонка</dt>
+                        <dd class="col-7">{{ task.column.name }}</dd>
+                        <dt class="col-5">Автор</dt>
+                        <dd class="col-7">{{ task.author.get_full_name|default:task.author.username }}</dd>
+                        <dt class="col-5">Исполнитель</dt>
+                        <dd class="col-7">
+                            {% if task.assignee %}
+                                {{ task.assignee.get_full_name|default:task.assignee.username }}
+                            {% else %}
+                                Не назначен
+                            {% endif %}
+                        </dd>
+                        <dt class="col-5">Создана</dt>
+                        <dd class="col-7">{{ task.created_at|date:'d.m.Y H:i' }}</dd>
+                        <dt class="col-5">Срок</dt>
+                        <dd class="col-7">{{ task.due_date|date:'d.m.Y'|default:'Не указан' }}</dd>
+                    </dl>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <section class="mt-5">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+            <h2 class="h4 mb-0">Комментарии</h2>
+            <span class="badge text-bg-secondary">{{ comments|length }}</span>
+        </div>
+
+        {% if comments %}
+            <div class="d-grid gap-3 mb-4">
+                {% for comment in comments %}
+                    <article class="card border-0 shadow-sm">
+                        <div class="card-header bg-white d-flex flex-wrap justify-content-between gap-2">
+                            <span class="fw-semibold">{{ comment.author.get_full_name|default:comment.author.username }}</span>
+                            <time class="text-secondary small"
+                                  datetime="{{ comment.created_at|date:'c' }}">
+                                {{ comment.created_at|date:'d.m.Y H:i' }}
+                            </time>
+                        </div>
+                        <div class="card-body">
+                            <div class="company-description">{{ comment.text|linebreaksbr }}</div>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body text-secondary">Комментариев пока нет.</div>
+            </div>
+        {% endif %}
+
+        {% if can_comment %}
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h3 class="h5">Добавить комментарий</h3>
+                    <form method="post" action="{% url 'tracker:comment_create' task.pk %}" novalidate>
+                        {% csrf_token %}
+                        {% if comment_form.non_field_errors %}
+                            <div class="alert alert-danger" role="alert">{{ comment_form.non_field_errors }}</div>
+                        {% endif %}
+                        {% for field in comment_form %}
+                            <div class="mb-3">
+                                <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                {{ field }}
+                                {% for error in field.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                        <button class="btn btn-primary" type="submit">Отправить</button>
+                    </form>
+                </div>
+            </div>
+        {% endif %}
+    </section>
+{% endblock %}

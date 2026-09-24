@@ -1,0 +1,54 @@
+{% extends 'tracker/base.html' %}
+
+{% block title %}{{ product.name }} — Жир{% endblock %}
+
+{% block content %}
+    <nav aria-label="Хлебные крошки" class="mb-3">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'tracker:company_list' %}">Компании</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'tracker:company_detail' product.company.pk %}">{{ product.company.name }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ product.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-4">
+        <div>
+            <h1 class="h3 mb-1">{{ product.name }}</h1>
+            <p class="text-secondary mb-0">Компания: {{ product.company.name }}</p>
+        </div>
+        {% if can_edit %}
+            <a class="btn btn-outline-primary" href="{% url 'tracker:product_edit' product.pk %}">Редактировать</a>
+        {% endif %}
+    </div>
+
+    <section class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <h2 class="h5">Описание</h2>
+            <div class="company-description text-secondary">{{ product.description|default:'Описание не добавлено.'|linebreaksbr }}</div>
+        </div>
+    </section>
+
+    <section>
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+            <h2 class="h4 mb-0">Команды</h2>
+            {% if can_create_team %}
+                <a class="btn btn-primary btn-sm" href="{% url 'tracker:team_create' product.pk %}">Создать команду</a>
+            {% endif %}
+        </div>
+        {% if teams %}
+            <div class="list-group shadow-sm">
+                {% for team in teams %}
+                    <a class="list-group-item list-group-item-action p-3"
+                       href="{% url 'tracker:team_detail' team.pk %}">
+                        <div class="fw-semibold">{{ team.name }}</div>
+                        {% if team.description %}<small class="text-secondary">{{ team.description|truncatechars:180 }}</small>{% endif %}
+                    </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-secondary">Доступных команд пока нет.</div>
+            </div>
+        {% endif %}
+    </section>
+{% endblock %}
