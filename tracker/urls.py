@@ -19,6 +19,31 @@ urlpatterns = [
     ),
     path('products/<int:pk>/', views.product_detail, name='product_detail'),
     path('products/<int:pk>/edit/', views.product_edit, name='product_edit'),
+    path('teams/', views.team_list, name='team_list'),
+    path(
+        'products/<int:product_id>/teams/create/',
+        views.team_create,
+        name='team_create',
+    ),
+    path('teams/<int:pk>/', views.team_detail, name='team_detail'),
+    path('teams/<int:pk>/edit/', views.team_edit, name='team_edit'),
+    path(
+        'teams/<int:team_id>/members/add/',
+        views.team_member_add,
+        name='team_member_add',
+    ),
+    path(
+        'teams/<int:team_id>/members/<int:membership_id>/delete/',
+        views.team_member_delete,
+        name='team_member_delete',
+    ),
+    path(
+        'teams/<int:team_id>/tasks/create/',
+        views.task_create,
+        name='task_create',
+    ),
+    path('tasks/<int:pk>/', views.task_detail, name='task_detail'),
+    path('tasks/<int:pk>/edit/', views.task_edit, name='task_edit'),
     path('register/', views.register, name='register'),
     path(
         'login/',

@@ -29,14 +29,20 @@
     </section>
 
     <section>
-        <h2 class="h4 mb-3">Команды</h2>
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+            <h2 class="h4 mb-0">Команды</h2>
+            {% if can_create_team %}
+                <a class="btn btn-primary btn-sm" href="{% url 'tracker:team_create' product.pk %}">Создать команду</a>
+            {% endif %}
+        </div>
         {% if teams %}
             <div class="list-group shadow-sm">
                 {% for team in teams %}
-                    <div class="list-group-item p-3">
+                    <a class="list-group-item list-group-item-action p-3"
+                       href="{% url 'tracker:team_detail' team.pk %}">
                         <div class="fw-semibold">{{ team.name }}</div>
                         {% if team.description %}<small class="text-secondary">{{ team.description|truncatechars:180 }}</small>{% endif %}
-                    </div>
+                    </a>
                 {% endfor %}
             </div>
         {% else %}

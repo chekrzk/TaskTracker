@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 
-from .models import Company, Product
+from .models import Company, Product, Task, Team, TeamMember
 
 
 class BootstrapFormMixin:
@@ -46,3 +46,72 @@ class ProductForm(BootstrapFormMixin, forms.ModelForm):
         widgets = {
             'description': forms.Textarea(attrs={'rows': 5}),
         }
+
+
+class TeamForm(BootstrapFormMixin, forms.ModelForm):
+    class Meta:
+        model = Team
+        fields = ('name', 'description')
+        widgets = {
+            'description': forms.Textarea(attrs={'rows': 5}),
+        }
+
+
+class TeamMemberForm(BootstrapFormMixin, forms.ModelForm):
+    class Meta:
+        model = TeamMember
+        fields = ('user', 'role')
+
+    def __init__(self, *args, team, **kwargs):
+        self.team = team
+        super().__init__(*args, **kwargs)
+        self.fields['user'].queryset = get_user_model().objects.order_by(
+            'username', 'pk',
+        )
+
+    def clean_user(self):
+        user = self.cleaned_data['user']
+        if TeamMember.objects.filter(team=self.team, user=user).exists():
+            raise forms.ValidationError('Пользователь уже состоит в этой команде.')
+        return user
+
+
+class TaskForm(BootstrapFormMixin, forms.ModelForm):
+    class Meta:
+        model = Task
+        fields = (
+            'title',
+            'description',
+            'type',
+            'priority',
+            'assignee',
+            'column',
+            'due_date',
+        )
+        widgets = {
+            'description': forms.Textarea(attrs={'rows': 5}),
+            'due_date': forms.DateInput(attrs={'type': 'date'}),
+        }
+
+    def __init__(
+        self,
+        *args,
+        team,
+        include_column=True,
+        allow_assignment=True,
+        **kwargs,
+    ):
+        self.team = team
+        super().__init__(*args, **kwargs)
+        self.fields['assignee'].queryset = get_user_model().objects.filter(
+            team_memberships__team=team,
+        ).distinct().order_by('username', 'pk')
+        self.fields['column'].queryset = team.columns.order_by('position', 'pk')
+
+        if not include_column:
+            self.fields.pop('column')
+        if not allow_assignment:
+            self.fields['assignee'].disabled = True
+            self.fields['assignee'].help_text = (
+                'Назначать исполнителя может только Team Lead.'
+            )

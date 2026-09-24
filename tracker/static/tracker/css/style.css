@@ -102,3 +102,20 @@ body {
 .company-description {
     overflow-wrap: anywhere;
 }
+
+.kanban-board {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    padding-bottom: 0.5rem;
+    overflow-x: auto;
+}
+
+.kanban-column {
+    width: 280px;
+    min-width: 280px;
+}
+
+.kanban-column .card-body {
+    background: #f7f8f9;
+}
