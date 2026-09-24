@@ -1,33 +1,27 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Вход — Жир</title>
-    <link rel="stylesheet" href="{% static 'tracker/css/style.css' %}">
-</head>
-<body>
-    <main class="welcome auth-card">
-        <h1>Вход</h1>
-        {% if form.errors %}
-            <p class="form-error">Неверное имя пользователя или пароль.</p>
-        {% endif %}
-        <form method="post">
-            {% csrf_token %}
-            <input type="hidden" name="next" value="{{ next }}">
-            {% for field in form %}
-                <div class="form-field">
-                    {{ field.label_tag }}
-                    {{ field }}
-                    {% for error in field.errors %}
-                        <div class="form-error">{{ error }}</div>
-                    {% endfor %}
-                </div>
-            {% endfor %}
-            <button type="submit">Войти</button>
-        </form>
-        <p>Нет аккаунта? <a href="{% url 'tracker:register' %}">Зарегистрироваться</a></p>
-    </main>
-</body>
-</html>
+{% extends 'tracker/base.html' %}
+
+{% block title %}Вход — Жир{% endblock %}
+
+{% block auth_content %}
+    <h1 class="h3 mb-4">Вход</h1>
+    {% if form.errors %}
+        <div class="alert alert-danger" role="alert">Неверное имя пользователя или пароль.</div>
+    {% endif %}
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ next }}">
+        {% for field in form %}
+            <div class="mb-3">
+                <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% for error in field.errors %}
+                    <div class="invalid-feedback d-block">{{ error }}</div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+        <button class="btn btn-primary w-100" type="submit">Войти</button>
+    </form>
+    <p class="text-center text-secondary mt-4 mb-0">
+        Нет аккаунта? <a href="{% url 'tracker:register' %}">Зарегистрироваться</a>
+    </p>
+{% endblock %}

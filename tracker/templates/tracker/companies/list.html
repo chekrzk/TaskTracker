@@ -1,0 +1,46 @@
+{% extends 'tracker/base.html' %}
+
+{% block title %}Компании — Жир{% endblock %}
+
+{% block content %}
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+            <h1 class="h3 mb-1">Компании</h1>
+            <p class="text-secondary mb-0">Компании, которыми вы владеете или в командах которых состоите.</p>
+        </div>
+        <a class="btn btn-primary" href="{% url 'tracker:company_create' %}">Создать компанию</a>
+    </div>
+
+    {% if companies %}
+        <div class="row g-3">
+            {% for company in companies %}
+                <div class="col-12 col-xl-6">
+                    <article class="card h-100 border-0 shadow-sm">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between gap-3 mb-2">
+                                <h2 class="h5 mb-0">
+                                    <a class="text-decoration-none" href="{% url 'tracker:company_detail' company.pk %}">{{ company.name }}</a>
+                                </h2>
+                                {% if company.owner_id == request.user.id %}
+                                    <span class="badge text-bg-primary">Владелец</span>
+                                {% else %}
+                                    <span class="badge text-bg-secondary">Участник</span>
+                                {% endif %}
+                            </div>
+                            <p class="text-secondary mb-3">{{ company.description|default:'Описание не добавлено.'|truncatechars:180 }}</p>
+                            <small class="text-secondary">Владелец: {{ company.owner.get_full_name|default:company.owner.username }}</small>
+                        </div>
+                    </article>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state card border-0 shadow-sm text-center">
+            <div class="card-body p-5">
+                <h2 class="h5">Компаний пока нет</h2>
+                <p class="text-secondary">Создайте первую компанию, чтобы затем добавить продукты и команды.</p>
+                <a class="btn btn-primary" href="{% url 'tracker:company_create' %}">Создать компанию</a>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}

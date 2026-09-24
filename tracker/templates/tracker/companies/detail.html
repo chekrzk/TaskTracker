@@ -1,0 +1,53 @@
+{% extends 'tracker/base.html' %}
+
+{% block title %}{{ company.name }} — Жир{% endblock %}
+
+{% block content %}
+    <nav aria-label="Хлебные крошки" class="mb-3">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'tracker:company_list' %}">Компании</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ company.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-4">
+        <div>
+            <h1 class="h3 mb-1">{{ company.name }}</h1>
+            <p class="text-secondary mb-0">Владелец: {{ company.owner.get_full_name|default:company.owner.username }}</p>
+        </div>
+        {% if can_edit %}
+            <a class="btn btn-outline-primary" href="{% url 'tracker:company_edit' company.pk %}">Редактировать</a>
+        {% endif %}
+    </div>
+
+    <section class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <h2 class="h5">Описание</h2>
+            <div class="company-description text-secondary">{{ company.description|default:'Описание не добавлено.'|linebreaksbr }}</div>
+        </div>
+    </section>
+
+    <section>
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+            <h2 class="h4 mb-0">Продукты</h2>
+            {% if can_edit %}
+                <a class="btn btn-primary btn-sm" href="{% url 'tracker:product_create' company.pk %}">Создать продукт</a>
+            {% endif %}
+        </div>
+        {% if products %}
+            <div class="list-group shadow-sm">
+                {% for product in products %}
+                    <a class="list-group-item list-group-item-action p-3"
+                       href="{% url 'tracker:product_detail' product.pk %}">
+                        <div class="fw-semibold">{{ product.name }}</div>
+                        {% if product.description %}<small class="text-secondary">{{ product.description|truncatechars:180 }}</small>{% endif %}
+                    </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-secondary">Доступных продуктов пока нет.</div>
+            </div>
+        {% endif %}
+    </section>
+{% endblock %}
