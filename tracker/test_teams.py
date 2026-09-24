@@ -371,6 +371,25 @@ class TeamViewTests(TestCase):
             404,
         )
 
+    def test_last_team_lead_cannot_be_deleted(self):
+        self.client.force_login(self.lead)
+        response = self.client.post(
+            reverse(
+                'tracker:team_member_delete',
+                args=[self.team.pk, self.lead_membership.pk],
+            ),
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            'Нельзя удалить последнего Team Lead команды.',
+        )
+        self.assertTrue(
+            TeamMember.objects.filter(pk=self.lead_membership.pk).exists(),
+        )
+
     def test_member_mutations_are_post_only_and_csrf_protected(self):
         self.client.force_login(self.lead)
         add_url = reverse('tracker:team_member_add', args=[self.team.pk])

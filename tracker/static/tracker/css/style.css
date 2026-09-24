@@ -139,3 +139,35 @@ body {
 .kanban-task-drag {
     transform: rotate(1deg);
 }
+
+.dashboard-stat {
+    border-top: 3px solid var(--bs-primary) !important;
+}
+
+.dashboard-list .list-group-item:first-child {
+    padding-top: 0 !important;
+}
+
+.dashboard-list .list-group-item:last-child {
+    padding-bottom: 0 !important;
+    border-bottom: 0;
+}
+
+.dashboard-task-table th {
+    color: #667085;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.dashboard-task-table td {
+    min-width: 120px;
+}
+
+.dashboard-task-table td:first-child {
+    min-width: 260px;
+}
+
+.dashboard-empty {
+    min-height: 116px;
+}

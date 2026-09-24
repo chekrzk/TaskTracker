@@ -5,7 +5,7 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
-from django.db.models import Max, Prefetch, Q
+from django.db.models import Count, Max, Prefetch, Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
@@ -24,6 +24,8 @@ from .models import (
     BoardColumn, Comment, Company, Product, Task, Team, TeamMember,
 )
 from .permissions import (
+    TeamCapability,
+    can_assign_task as _can_assign_task,
     can_comment_task as _can_comment_task,
     can_create_product as _can_create_product,
     can_create_task as _can_create_task,
@@ -38,13 +40,88 @@ from .permissions import (
     can_view_company as _can_view_company,
     can_view_product as _can_view_product,
     can_view_team as _can_view_team,
-    can_assign_task as _can_assign_task,
+    role_has_capability as _role_has_capability,
 )
-
 
 @login_required
 def home(request):
-    return render(request, 'tracker/home.html')
+    companies = list(
+        Company.objects.filter(owner=request.user).annotate(
+            product_count=Count('products', distinct=True),
+            team_count=Count('products__teams', distinct=True),
+        ).order_by('name', 'pk'),
+    )
+    teams = list(
+        Team.objects.filter(
+            Q(product__company__owner=request.user)
+            | Q(members=request.user),
+        ).select_related(
+            'product',
+            'product__company',
+        ).prefetch_related(
+            Prefetch(
+                'memberships',
+                queryset=TeamMember.objects.filter(user=request.user),
+                to_attr='dashboard_memberships',
+            ),
+        ).annotate(
+            task_count=Count('tasks', distinct=True),
+            column_count=Count('columns', distinct=True),
+        ).distinct().order_by(
+            'product__company__name',
+            'product__name',
+            'name',
+            'pk',
+        ),
+    )
+    for team in teams:
+        membership = (
+            team.dashboard_memberships[0]
+            if team.dashboard_memberships
+            else None
+        )
+        team.dashboard_role = (
+            membership.get_role_display()
+            if membership is not None
+            else 'Владелец компании'
+        )
+        team.can_create_task = (
+            membership is not None
+            and team.column_count > 0
+            and _role_has_capability(
+                membership.role,
+                TeamCapability.CREATE_TASK,
+            )
+        )
+
+    accessible_tasks = Task.objects.filter(
+        Q(team__members=request.user)
+        | Q(team__product__company__owner=request.user),
+    ).select_related(
+        'team',
+        'team__product',
+        'team__product__company',
+        'column',
+        'assignee',
+        'author',
+    ).distinct()
+    assigned_queryset = accessible_tasks.filter(assignee=request.user)
+
+    context = {
+        'companies': companies,
+        'teams': teams,
+        'assigned_tasks': list(
+            assigned_queryset.order_by('-updated_at', '-pk')[:8],
+        ),
+        'recent_tasks': list(
+            accessible_tasks.order_by('-created_at', '-pk')[:8],
+        ),
+        'company_count': len(companies),
+        'team_count': len(teams),
+        'assigned_task_count': assigned_queryset.count(),
+        'accessible_task_count': accessible_tasks.count(),
+    }
+    return render(request, 'tracker/home.html', context)
 
 
 def register(request):
@@ -356,6 +433,18 @@ def team_member_delete(request, team_id, membership_id):
         pk=membership_id,
         team=team,
     )
+    if (
+        membership.role == TeamMember.Role.LEAD
+        and not team.memberships.exclude(pk=membership.pk).filter(
+            role=TeamMember.Role.LEAD,
+        ).exists()
+    ):
+        messages.error(
+            request,
+            'Нельзя удалить последнего Team Lead команды.',
+        )
+        return redirect('tracker:team_detail', pk=team.pk)
+
     membership.delete()
     messages.success(request, 'Участник удалён из команды.')
     return redirect('tracker:team_detail', pk=team.pk)

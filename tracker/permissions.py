@@ -81,9 +81,13 @@ def team_role(user, team):
     ).values_list('role', flat=True).first()
 
 
+def role_has_capability(role, capability):
+    return capability in ROLE_CAPABILITIES.get(role, ())
+
+
 def has_team_capability(user, team, capability):
     role = team_role(user, team)
-    return capability in ROLE_CAPABILITIES.get(role, ())
+    return role_has_capability(role, capability)
 
 
 def is_team_lead(user, team):
